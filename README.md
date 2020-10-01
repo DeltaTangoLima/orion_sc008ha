@@ -65,3 +65,21 @@ So, to recap, the pins are actually:
 
 Now to try brute forcing the password, which will likely be a nuisance, as the prompt  locks up after what looks like a 1 second timeout, unless you hit enter to get the password prompt.  More to come...
 
+### 2020-10-01 (update 2) - Gaining access
+
+After trying to brute force using a few lists I found around the place, I started researching what detail I could about the device, as there were very few markings on the outside.
+
+Searching around for the prompt (particularly the "meari_c5" part) eventually led me to discover the camera is made by Hangzhou Meari. Even better, I found [this](https://fccid.io/2AG7CMINI8C) FCC ID, with internal photos depicting a board that looks similar to the board in my camera.
+
+My best guess at this stage is that the Orion SC008HA is a new variant of the Meari Mini 8C. Just in case, I grabbed the user manual and internal photos PDFs (you can find them [here](./fcc/)).
+
+Also, when booting up with the reset button pressed, the output is this:
+
+```
+hisi-sdhci: 0
+PPS:Jul 22 2019 00:22:28 meari_c5    0 
+button
+cmd:fatload mmc 0 0x42000000 ppsMmcTool.txt 1020
+```
+
+Maybe a clue as to something I can do with a file called ppsMmcTool.txt on the microSD card? More searching to do.
