@@ -26,3 +26,42 @@ The board and lens bezel can now be removed from the remaining half of the "head
 * 2-wire connector for USB power (5 o'clock)
 
 No GPIO pins, or any other interface pads, appear to be available.
+
+### 2020-10-01 - Attemping to find UART
+
+So I left this on a corner of my workbench for a couple of months or so, then saw a post by @koutto on Reddit, linking to [this](https://github.com/koutto/hardware-hacking) brilliant starter tutorial, on hacking hardware devices.
+
+(Re)inspired, I took a closer look at the camera board, and (using my previous clockface reference) I saw a row of 4 pads at 11 o'clock.  Time to take a closer look...
+
+* Pad 1 (left): using the ground pin on the USB power connector, this pad is GND
+* Pad 2: testing with GND pad, this appears to have a constant voltage of ~3.4V
+* Pad 3: testing with GND pad, this appears to have a constant voltage of ~3.4V, slightly less than pad 2
+* Pad 4: testing with GND pad, this appears to have a low, fluctuating voltage, between ~200mV and ~1.1V
+
+So far, my first thoughts are that these are UART pins:
+
+* Pin 1 = GND
+* Pin 2 = 3.3V Vcc
+* Pin 3 = likely Tx
+* Pin 4 = likely Rx
+
+Time to solder some header pins and hook it up to either a Raspberry Pi or an Arduino board, and see what I get.
+
+Success ! (of sorts) - looks like I had Tx and Rx the wrong way around. Plugging them in to the UART pins on a Raspberry Pi and using screen to monitor the serial interface gives up:
+```
+hisi-sdhci: 0
+PPS:Jul 22 2019 00:22:28 meari_c5    0 
+
+
+please input password::
+```
+
+So, to recap, the pins are actually:
+
+* Pin 1 = GND
+* Pin 2 = 3.3V Vcc
+* Pin 3 = Rx
+* Pin 4 = Tx
+
+Now to try brute forcing the password, which will likely be a nuisance, as the prompt  locks up after what looks like a 1 second timeout, unless you hit enter to get the password prompt.  More to come...
+
