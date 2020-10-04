@@ -1,13 +1,22 @@
 # Orion SC008HA Hacks
-My recorded attempts at hacking the Oriona SC008HA IP camera
+Chronicling my attempts at hacking the SC008HA IP camera - a Tuya-based IP camera branded Orion here in Australia, by Bunnings (our major hardware chain).
 
-### Introduction
+## Contents
+
+- [First look](#first-look)
+- [Locating UART](#attempting-to-find-uart)
+- [Attempting to gain access](#attempting-to-gain-access)
+
+## Introduction
 
 I was recently given an Orion SC008HA wiress IP surveillance camera by a friend who had no need for it. Knowing I was into home automation and enjoyed meddling with all things technology, he gave it to me in exchange for some home-made pasta sauces, a handful of Cat 6A ethernet cables, and a motion sensor for the light at his front door. Assuming I can get this working as I want, I consider that a good deal.
 
 This repo simply documents my efforts to attempt to hack the camera so I can use it as a plain old RTSP camera wth my Home Assistant server, and not be tied to the application required to use it out of the box. I'm inspired, in part at least, by the efforts of @ant-thomas, who managed to (successfully) hack a ZS-GX1 camera [here](https://github.com/ant-thomas/zsgx1hacks).
 
-### 2020-07-19 - First look
+## First look
+
+### 2020-07-09
+
 * Photos of the separated "head" and board can be found [here](./photos)
 
 Externally, this camera mostly resembles the ZS-GX1, pictured [here](./img/zs-gx1.jpg), with the only notable exception being the lack of an ethernet socket on the back. Instead, there is only a single micro-USB socket for power.
@@ -27,7 +36,9 @@ The board and lens bezel can now be removed from the remaining half of the "head
 
 No GPIO pins, or any other interface pads, appear to be available.
 
-### 2020-10-01 - Attemping to find UART
+## Attempting to find UART
+
+### 2020-10-01
 
 So I left this on a corner of my workbench for a couple of months or so, then saw a post by @koutto on Reddit, linking to [this](https://github.com/koutto/hardware-hacking) brilliant starter tutorial, on hacking hardware devices.
 
@@ -65,7 +76,9 @@ So, to recap, the pins are actually:
 
 Now to try brute forcing the password, which will likely be a nuisance, as the prompt  locks up after what looks like a 1 second timeout, unless you hit enter to get the password prompt.  More to come...
 
-### 2020-10-01 (update 2) - Gaining access
+## Attempting to gain access
+
+### 2020-10-01
 
 After trying to brute force using a few lists I found around the place, I started researching what detail I could about the device, as there were very few markings on the outside.
 
@@ -84,9 +97,9 @@ cmd:fatload mmc 0 0x42000000 ppsMmcTool.txt 1020
 
 Maybe a clue as to something I can do with a file called ppsMmcTool.txt on the microSD card? More searching to do.
 
-### 2020-10-03 - Found a webserver
+### 2020-10-03
 
-So my serching eventually led me to [this](https://github.com/AMoo-Miki/homebridge-tuya-lan/issues/4) thread for Tuya homebridges.
+So my searching eventually led me to [this](https://github.com/AMoo-Miki/homebridge-tuya-lan/issues/4) thread for Tuya homebridges.
 
 I'll save you the effort of reading about all the passwords I tried but, I did manage to get access to the webserver running on port 80, using the below credentials that I found somewhere in the thread:
 
@@ -235,4 +248,36 @@ These translate to:
 6. 57996
 7. 12194
 
-I'll keep sniffing around.  The Github thread I linked above is quite active, as of a couple of days ago, which is great.  I'll definitely be keeping an eye on it.
+I'll keep sniffing around.  The Github thread I linked above is quite active, as of a couple of days ago, which is potentially promising.  I'll definitely be keeping an eye on it.
+
+### 2020-10-04
+
+So I thought I'd see if I could make any progress with the ppsMmcTool.txt file mentioned when booting while holding the reset button.
+
+I touched a file of the same name on a FAT32-formatted microSD card, and got the following when booting:
+
+```
+hisi-sdhci: 0 (SD)
+PPS:Jul 22 2019 00:22:28 meari_c5    0 
+button
+cmd:fatload mmc 0 0x42000000 ppsMmcTool.txt 1020
+had init
+reading ppsMmcTool.txt
+** ppsMmcTool.txt shorter than offset + len **
+18 bytes read in 3 ms (5.9 KiB/s)
+magic err
+```
+
+Not sure what this means yet, except that it's possibly expecting the file to be 1020 bytes in length?  I filled out the file with hex 00s until it reached 1020 bytes, but got the same message:
+
+```
+hisi-sdhci: 0 (SD)
+PPS:Jul 22 2019 00:22:28 meari_c5    0 
+button
+cmd:fatload mmc 0 0x42000000 ppsMmcTool.txt 1020
+had init
+reading ppsMmcTool.txt
+** ppsMmcTool.txt shorter than offset + len **
+1020 bytes read in 3 ms (332 KiB/s)
+```
+
