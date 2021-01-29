@@ -284,7 +284,7 @@ reading ppsMmcTool.txt
 
 ## First success
 
-So it's been quite a while since I came back to this project, during which time a few people came across this repo and reached out to me to discuss my proress and offer their own experiences from trying to hack simialr devices.
+So it's been quite a while since I came back to this project, during which time a few people came across this repo and reached out to me to discuss my progress and offer their own experiences from trying to hack similar devices.
 
 Unfortunately, this came at an incredibly busy and stressful period for me, culminating in me quitting my job in December (don't worry - I got an awesome new one before I did) and escaping for a week away with the family over Christmas/New Year.
 
@@ -292,11 +292,11 @@ So, finally sitting down a few days ago (late January) to pick this up again, I 
 
 @guino (real name Wagner) had not only managed to get through the bootloader on this device, but developed a shell hack utilising the ppsMmcTool.txt file that delivered all sorts of wonderful goodies for people to play with and modify.
 
-In other words, Wagner has developed a software hack that onlky requires a microSD card, and nothing more.
+In other words, Wagner has developed a software hack that only requires a microSD card, and nothing more.
 
-Not only that, but he has also figured out how to disassemble and patch the core application one these devices, enabling the Hoyl Grail of rtsp for those that want it!
+Not only that, but he has also figured out how to disassemble and patch the core application one these devices, enabling the Holy Grail of rtsp for those that want it!
 
-It turns out my particular device is running an older version of this core app, but I've managed to get mjpeg working.  Patching for rtsp has not yet delivered results for me, but Wagner is verty kindly working with me to try and figure out these issues.
+It turns out my particular device is running an older version of this core app, but I've managed to get mjpeg working.  Patching for rtsp has not yet delivered results for me, but Wagner is very kindly working with me to try and figure out these issues.
 
 So, in short, if you have one of these devices and haven't yet managed to enable mjpeg or rtsp support, please take a look at Wagner's excellent repo on the subject, and specifically read [the issue](https://github.com/guino/BazzDoorbell/issues/2) he opened, describing the process.
 
