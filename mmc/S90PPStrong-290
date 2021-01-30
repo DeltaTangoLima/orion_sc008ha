@@ -1,0 +1,25 @@
+#!/bin/sh
+
+export PATH=/usr/bin:/sbin/:/usr/sbin:/bin
+
+mkdir -p /opt/pps
+mount -t cramfs /dev/mtdblock5 /opt/pps
+tar xzf /opt/pps/app.tar.gz -C /
+rm -f /home/init.d/S60ppsapp
+umount /opt/pps
+
+(
+/home/init.d/initS
+cd /home/app/
+./network &
+sleep 1
+/mnt/mmc01/ppsapp-rtsp &
+sleep 15
+rm /home/app -rf
+sleep 20
+until [ 1 -gt 2 ]
+do
+ echo 3 > /proc/sys/vm/drop_caches
+ sleep 2
+done
+) &

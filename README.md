@@ -7,6 +7,7 @@ Chronicling my attempts at hacking the SC008HA IP camera - a Tuya-based IP camer
 - [Locating UART](#attempting-to-find-uart)
 - [Attempting to gain access](#attempting-to-gain-access)
 - [Success! (well, nearly...)](#first-success)
+- [Great success - high five!](#total-success)
 
 ## Introduction
 
@@ -294,12 +295,68 @@ So, finally sitting down a few days ago (late January) to pick this up again, I 
 
 In other words, Wagner has developed a software hack that only requires a microSD card, and nothing more.
 
-Not only that, but he has also figured out how to disassemble and patch the core application one these devices, enabling the Holy Grail of rtsp for those that want it!
+Not only that, but he has also figured out how to reverse engineer and patch the core application on these devices, enabling the Holy Grail of rtsp for those that want it!
 
-It turns out my particular device is running an older version of this core app, but I've managed to get mjpeg working.  Patching for rtsp has not yet delivered results for me, but Wagner is very kindly working with me to try and figure out these issues.
+It turns out my particular device is running an older version (v2.9.0) of this core app, but I've managed to get mjpeg working.  Patching for rtsp has not yet delivered results for me, but Wagner is very kindly working with me to try and figure out these issues.
 
 So, in short, if you have one of these devices and haven't yet managed to enable mjpeg or rtsp support, please take a look at Wagner's excellent repo on the subject, and specifically read [the issue](https://github.com/guino/BazzDoorbell/issues/2) he opened, describing the process.
 
 If you do have success with this, please consider [shouting Wagner a coffee](http://paypal.me/wbbo) for all his hard work.
 
 I'll keep posting my progress towards rtsp on this device, as it happens.
+
+## Total success
+
+So, after another couple of days, using Wagner's hard work and exchanging lots of emails with him, I finally got the patched version of the core app working with rtsp streaming.  Rather than reinvent most of Wagner's wheel, I'll simply point to the steps I took in his guide, and indicate where I varied any of them for myself.
+
+### A quick recap...
+
+First, it helps to understand what Wagner's hard work gave us, which is a [software-based approach](https://github.com/guino/BazzDoorbell/issues/2) to executing our own arbitrary code at boot-time, enabling us to do things like:
+
+- Turning on a telnet daemon, so we can remotely login to a shell
+- Configuring and launching a http server for mjpeg streaming
+- Capturing copies of the core app (indeed, anything else on the camera's filesystems) for later analysis/hacking
+
+After achieving this, Wagner then turned his attention to the core application on the device - a binary called `ppsapp`.  He managed to successfully reverse engineer this binary and document the steps required to patch `ppsapp` to enable rtsp streaming.
+
+Wagner's [patching guide](https://github.com/guino/ppsapp-rtsp/) is very comprehensive, and I tried valiantly to follow his steps on my own copy of `ppsapp` but I was most certainly out of my depth.
+
+Fortunately, Wagner is kindly patching and [hosting](https://github.com/guino/ppsapp-rtsp/issues/1) various versions of the file and I **STRONGLY** recommend you check there first, before trying to patch the file on your own.  Be sure to confirm exact version using the included md5 hashes.  I accepted Wagner's offer to patch my `ppsapp`, which can be found [here](https://github.com/guino/ppsapp-rtsp/issues/1#issuecomment-769365380).
+
+### Why didn't the entire process work for me?
+
+When trying to use Wagner's process, I found that my device didn't like running the patched version of the file.  In fact, it didn't even like it when I killed the original process and re-ran the unpatched version from the SD card.
+
+After conferring with Wagner, we concluded there must be something about an in-built watchdog process that doesn't like it when the app is executed after init, so the key was to try and get the camera to execute our patched `ppsapp` during init.
+
+### How did I get it working?
+
+After a *lot* of trial and error, I finally managed to get my camera to successfully run the patched `ppsapp` during init, by varying Wagner's process per the below:
+
+1. I put a completely rewritten version of the `S90PPStrong` init script in the root of the SD card (named `S90PPStrong-290`).
+
+2. I varied [step 2](https://github.com/guino/BazzDoorbell/issues/2) by including an additional command in my `env` file to copy the `S90PPSAtrong-290` init script to `/etc/init.d/S90PPStrong`. This had to be done *very early* in the init process - trying to use `initrun.sh` to do this was simply too late - the stock init.d script was being executed before we could overwrite it.
+
+3. I placed the patched `ppsapp` in the root of my SD card, named `ppsapp-rtsp` (so as not to clash with `custom.sh` in Wagner's hack).
+
+You can find the last two items [here](./mmc).  In short, I added the following the `env` file, just before the command the executes `/mnt/mmc/initrun.sh`:
+
+```
+cp_/mnt/mmc01/S90PPStrong-290_/etc/init.d/S90PPStrong;
+```
+
+So, my complete `env` file looks like:
+
+```
+bootargs=mem=37M console=ttyAMA0,115200n8 mtdparts=hi_sfc:384k(bld)ro,64k(env),64k(enc)ro,64k(sysflg),3584k(sys),6656k(app),1536k(cfg),1m(recove),2880k(user),128k(oeminfo) ppsAppParts=5 ppsWatchInitEnd - ip=\\${T//_/\\$\\'"\\\\x20"\\'}:::::";T=\\"sleep_5;mkdir_-p_/mnt/mmc01;mount_-t_vfat_/dev/mmcblk0p1_/mnt/mmc01;cp_/mnt/mmc01/S90PPStrong-290_/etc/init.d/S90PPStrong;/mnt/mmc01/initrun.sh&\\";eval"
+```
+
+**NOTE:** there are important characters that would be missing from the end of the file if you were to just copy/paste this text.  Wagner explains this after step 2 in [his guide](https://github.com/guino/BazzDoorbell/issues/2).  Also, don't just use my `env` file, unless your bootargs are already identical - also described in Wagner's guide.
+
+### Conclusion
+
+Major thanks to Wagner for all his hard work and perseverance, as well his generosity in patching people's `ppsapp` files for them.  Were it not for this, I'd still be mucking around with a Raspberry Pi hanging off the UART pins, trying in vain to discover the bootloader password.
+
+I know I said it earlier, but I'll say it again.  If you benefit from this, please consider [shouting Wagner a coffee](http://paypal.me/wbbo) for all his hard work.
+
+Cheers!
